@@ -1,21 +1,27 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"log/slog"
 	"net/http"
 	"os"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/melaniekung/snippetbox/internal/models"
 )
 
 // define strut to hold application-wide dependencies
 type application struct {
 	logger *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
 	// define new command-line flag
 	// saved as a pointer
 	addr := flag.String("addr", ":4000", "HTTP network address")
+	dsn := flag.String("dsn", "web:pass@/snippetbox?parseTime=true", "MySQL data source name")
 
 	// parse command-line flag
 	// NOTE: must be called before using the variable
@@ -29,7 +35,20 @@ func main() {
 		AddSource: true,
 	})) */
 
-	app := &application{logger: logger,}
+	// create connection pool and pass to DSN
+	db, err := openDB(*dsn)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
+	// defer call to db.Close() to close connection pool
+	defer db.Close()
+
+	app := &application{
+		logger: logger,
+		snippets: &models.SnippetModel{DB: db},
+	}
 
 	// dereference pointer before using flag
 	/* logger.Info("starting server", "addr", *addr) */
@@ -37,7 +56,22 @@ func main() {
 
 	// start new web server
 	// params: TCP network address, servermux
-	err := http.ListenAndServe(*addr, app.routes())
+	err = http.ListenAndServe(*addr, app.routes())
 	logger.Error(err.Error())
 	os.Exit(1)
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, err
+	}
+
+	return db, nil
 }
