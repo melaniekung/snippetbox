@@ -1,31 +1,43 @@
 package main
 
 import (
-	"log"
+	"flag"
+	"log/slog"
 	"net/http"
+	"os"
 )
 
+// define strut to hold application-wide dependencies
+type application struct {
+	logger *slog.Logger
+}
+
 func main() {
-	mux := http.NewServeMux()
+	// define new command-line flag
+	// saved as a pointer
+	addr := flag.String("addr", ":4000", "HTTP network address")
 
-	// create file server to serve files
-	// path is relative to project root directory
-	fileServer := http.FileServer(http.Dir("./assets/static/"))
+	// parse command-line flag
+	// NOTE: must be called before using the variable
+	flag.Parse()
 
-	// register file server as handler for all URL paths starting with "/static/"
-	// strip "/static" prefix before request reaches file server
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
+	// initialize new structured logger
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	/* 	// DEBUG LOGGING
+		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+		AddSource: true,
+	})) */
 
-	// register handler functions and route patterns
-	mux.HandleFunc("GET /{$}", home)
-	mux.HandleFunc("GET /snippet/view/{id}", snippetView)
-	mux.HandleFunc("GET /snippet/create", snippetCreate)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+	app := &application{logger: logger,}
 
-	log.Print("starting server on :4000")
+	// dereference pointer before using flag
+	/* logger.Info("starting server", "addr", *addr) */
+	logger.Info("starting server", slog.String("addr", *addr))
 
 	// start new web server
 	// params: TCP network address, servermux
-	err := http.ListenAndServe(":4000", mux)
-	log.Fatal(err)
+	err := http.ListenAndServe(*addr, app.routes())
+	logger.Error(err.Error())
+	os.Exit(1)
 }

@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	// add header to response header map
 	// header name: "Server", header value: "Go"
 	w.Header().Add("Server", "Go")
@@ -25,7 +24,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// NOTE: use ... to pass contents of slice as variadic arguments
 	ts, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Print(err.Error())
+		app.serverError(w, r, err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
@@ -33,12 +32,12 @@ func home(w http.ResponseWriter, r *http.Request) {
 	// write template content as response body
 	err = ts.ExecuteTemplate(w, "base", nil)
 	if err != nil {
-		log.Print(err.Error())
+		app.serverError(w, r, err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
-func snippetView(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// extract value of wildcard from request
 	// try to convert to integer
 	id, err := strconv.Atoi(r.PathValue("id"))
@@ -50,12 +49,11 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Display a specific snippet with ID %d...", id)
 }
 
-func snippetCreate(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display a form for creating a new snippet..."))
 }
 
-func snippetCreatePost(w http.ResponseWriter, r *http.Request) {
-	// send 201 status code
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Save a new snippet..."))
 }
