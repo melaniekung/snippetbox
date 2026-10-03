@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"text/template"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/melaniekung/snippetbox/internal/models"
@@ -15,6 +16,7 @@ import (
 type application struct {
 	logger *slog.Logger
 	snippets *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -45,9 +47,17 @@ func main() {
 	// defer call to db.Close() to close connection pool
 	defer db.Close()
 
+	// initialize template cache
+	templateCache, err := newTemplateCache()
+    if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	app := &application{
 		logger: logger,
 		snippets: &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	// dereference pointer before using flag

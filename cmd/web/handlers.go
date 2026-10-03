@@ -20,8 +20,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
+	// get templateData struct and add snippets slice
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+
+	err = app.render(w, r, http.StatusOK, "home.html", data)
+	if err != nil {
+		app.serverError(w, r, err)
 	}
 }
 
@@ -45,7 +50,13 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
+
+	err = app.render(w, r, http.StatusOK, "view.html", data)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
