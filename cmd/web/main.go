@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/melaniekung/snippetbox/internal/models"
@@ -19,6 +22,7 @@ type application struct {
 	snippets *models.SnippetModel
 	templateCache map[string]*template.Template
 	formDecoder *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -34,7 +38,7 @@ func main() {
 	// initialize new structured logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	/* 	// DEBUG LOGGING
-		logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 		AddSource: true,
 	})) */
@@ -58,11 +62,17 @@ func main() {
 
 	formDecoder := form.NewDecoder()
 
+	// initialize new session manager
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := &application{
 		logger: logger,
 		snippets: &models.SnippetModel{DB: db},
 		templateCache: templateCache,
 		formDecoder: formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	// dereference pointer before using flag

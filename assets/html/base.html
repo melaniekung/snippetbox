@@ -17,6 +17,10 @@
     <!-- invoke navigation template -->
      {{template "nav" .}}
     <main>
+        <!-- display flash message if exists -->
+         {{with .Flash}}
+            <div class="flash">{{.}}</div>
+         {{end}}
         <!-- invoke main template -->
         {{template "main" .}}
     </main>
