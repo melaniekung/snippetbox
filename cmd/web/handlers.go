@@ -11,9 +11,9 @@ import (
 )
 
 type snippetCreateForm struct {
-	Title string `form:"title"`
-	Content string `form:"content"`
-	Expires int `form:"expires"`
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
 	validator.Validator `form:"-"`
 }
 
@@ -49,7 +49,8 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, models.ErrNoRecord):
 			http.NotFound(w, r)
-		default: app.serverError(w, r, err)
+		default:
+			app.serverError(w, r, err)
 		}
 		return
 	}

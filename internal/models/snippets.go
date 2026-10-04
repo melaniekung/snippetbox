@@ -8,8 +8,8 @@ import (
 
 // define type to hold data for individual snippet
 type Snippet struct {
-	ID	int
-	Title string
+	ID      int
+	Title   string
 	Content string
 	Created time.Time
 	Expires time.Time
@@ -49,7 +49,7 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 	// ccopy values from each field in sql.Row to corresponding field in the Snippet struct
 	// NOTE: row.Scan arguments are pointers
 	// 		 number of rows must match number of columns returned by statement
-	err:= m.DB.QueryRow(stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	err := m.DB.QueryRow(stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
 	if err != nil {
 		switch {
 		// query returns no rows -> error

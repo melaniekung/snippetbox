@@ -18,10 +18,10 @@ import (
 
 // define strut to hold application-wide dependencies
 type application struct {
-	logger *slog.Logger
-	snippets *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder *form.Decoder
+	logger         *slog.Logger
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
 	sessionManager *scs.SessionManager
 }
 
@@ -55,7 +55,7 @@ func main() {
 
 	// initialize template cache
 	templateCache, err := newTemplateCache()
-    if err != nil {
+	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
@@ -68,10 +68,10 @@ func main() {
 	sessionManager.Lifetime = 12 * time.Hour
 
 	app := &application{
-		logger: logger,
-		snippets: &models.SnippetModel{DB: db},
-		templateCache: templateCache,
-		formDecoder: formDecoder,
+		logger:         logger,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
 		sessionManager: sessionManager,
 	}
 

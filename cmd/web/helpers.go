@@ -21,7 +21,7 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 	// pass target destination for decoding form data
 	err = app.formDecoder.Decode(dst, r.PostForm)
 	if err != nil {
-		// check target destination 
+		// check target destination
 		if _, ok := errors.AsType[*form.InvalidDecoderError](err); ok {
 			panic(err)
 		}
@@ -33,10 +33,10 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 }
 
 func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
-	var(
+	var (
 		method = r.Method
-		uri = r.URL.RequestURI()
-		trace = string(debug.Stack())  // convert byte slice to string
+		uri    = r.URL.RequestURI()
+		trace  = string(debug.Stack()) // convert byte slice to string
 	)
 
 	app.logger.Error(err.Error(), "method", method, "uri", uri, "trace", trace)
@@ -65,7 +65,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	}
 
 	w.WriteHeader(status)
-	
+
 	// write contents of buffer to http.ResponseWriter,
 	_, err = buf.WriteTo(w)
 	return err
@@ -74,6 +74,6 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData{
 		CurrentYear: time.Now().Year(),
-		Flash: app.sessionManager.PopString(r.Context(), "flash"),
+		Flash:       app.sessionManager.PopString(r.Context(), "flash"),
 	}
 }

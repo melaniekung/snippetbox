@@ -11,10 +11,10 @@ import (
 // define struct type to hold dynamic data for templates
 type templateData struct {
 	CurrentYear int
-	Snippet models.Snippet
-	Snippets []models.Snippet
-	Form any
-	Flash string
+	Snippet     models.Snippet
+	Snippets    []models.Snippet
+	Form        any
+	Flash       string
 }
 
 func humanDate(t time.Time) string {
@@ -63,4 +63,3 @@ func newTemplateCache() (map[string]*template.Template, error) {
 
 	return cache, nil
 }
-
