@@ -13,6 +13,8 @@ func (app *application) routes() http.Handler {
 	// create HTTP handler to serve embedded files
 	mux.Handle("GET /static/", http.FileServerFS(assets.Files))
 
+	mux.HandleFunc("GET /ping", ping)
+
 	// middleware chain for dynamic application routes
 	dynamic := alice.New(app.sessionManager.LoadAndSave, preventCSRF, app.authenticate)
 
