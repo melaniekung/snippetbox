@@ -66,6 +66,7 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour
+	sessionManager.Cookie.Secure = true
 
 	app := &application{
 		logger:         logger,
@@ -75,13 +76,31 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
+	// initialize tls.Config struct for non-default TLS settings
+	// not recommended for public-facing applications
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS13,
+	}
+
+	// initialize http.Server struct
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.routes(),
+		// create *log.Logger from structured logger handler to format http.Server error logs
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+		TLSConfig:    tlsConfig,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
 	// dereference pointer before using flag
 	/* logger.Info("starting server", "addr", *addr) */
-	logger.Info("starting server", slog.String("addr", *addr))
+	logger.Info("starting server", "addr", srv.Addr)
 
 	// start new web server
 	// params: TCP network address, servermux
-	err = http.ListenAndServe(*addr, app.routes())
+	err = srv.ListenAndServeTLS("./assets/tls/cert.pem", "./assets/tls/key.pem")
 	logger.Error(err.Error())
 	os.Exit(1)
 }
