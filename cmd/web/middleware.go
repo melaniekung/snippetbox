@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -63,6 +64,33 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 		// set "Cache-Control: no-store" header
 		// ensures authenticated pages are not stored in cache
 		w.Header().Add("Cache-Control", "no-store")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// retrieve authenticatedUserID value from session
+		id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+		if id == 0 {
+			// not authenticated - pass original request to next chain
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// check if user ID exists in db
+		exists, err := app.users.Exists(id)
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
+
+		// create new copy of request (with isAuthenticatedContextKey = true)
+		if exists {
+			ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+			r = r.WithContext(ctx)
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
