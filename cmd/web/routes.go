@@ -4,17 +4,14 @@ import (
 	"net/http"
 
 	"github.com/justinas/alice"
+	"github.com/melaniekung/snippetbox/assets"
 )
 
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
-	// create file server to serve static files (path relative to root)
-	fileServer := http.FileServer(http.Dir("./assets/static"))
-
-	// register file server as handler for all URL paths starting with "/static/"
-	// strip "/static" prefix before request reaches file server
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
+	// create HTTP handler to serve embedded files
+	mux.Handle("GET /static/", http.FileServerFS(assets.Files))
 
 	// middleware chain for dynamic application routes
 	dynamic := alice.New(app.sessionManager.LoadAndSave, preventCSRF, app.authenticate)
@@ -27,7 +24,7 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
 	mux.Handle("POST /user/login", dynamic.ThenFunc(app.userLoginPost))
 
-	// middleware choain for protected (authenticated-only) application routes
+	// middleware chain for protected (authenticated-only) application routes
 	protected := dynamic.Append(app.requireAuthentication)
 	mux.Handle("GET /snippet/create", protected.ThenFunc(app.snippetCreate))
 	mux.Handle("POST /snippet/create", protected.ThenFunc(app.snippetCreatePost))
